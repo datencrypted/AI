@@ -37,3 +37,58 @@ const rateValue = document.querySelector(".rate-value");
 let voices = [];
 function populateVoiceList() {
 voices = synth.getVoices();
+  for (let i = 0; i < voices.length; i++) {
+const option = document.createElement("option");
+option.textContent = `${voices[i].name} (${voices[i].lang})`;
+if (voices[i].default) {
+option.textContent += " — DEFAULT";
+}
+option.setAttribute("data-lang", voices[i].lang);
+option.setAttribute("data-name", voices[i].name);
+voiceSelect.appendChild(option); // Append the option to the
+select element
+}
+}
+populateVoiceList();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+document.getElementById('query').addEventListener('keydown',
+function(event) {
+if (event.key === 'Enter') {
+event.preventDefault();
+askQuery();
+}
+});
+async function askQuery() {
+const queryElement = document.getElementById('query');
+const query = queryElement.value;
+const responseElement = document.getElementById('response');
+try {
+const response = await fetch('/api/ask-query', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ query })
+});
+const data = await response.json();
+responseElement.textContent = data.reply;
+// Text-to-Speech
+const utterance = new SpeechSynthesisUtterance(data.reply);
+const selectedVoiceName =
+voiceSelect.selectedOptions[0].getAttribute('data-name');
+utterance.voice = voices.find(voice => voice.name ===
+selectedVoiceName);
+utterance.pitch = pitch.value;
+utterance.rate = rate.value;
+speechSynthesis.speak(utterance);
+// Clear the textarea
+queryElement.value = '';
+} catch (error) {
+responseElement.textContent = 'Error: ' + error.message;
+}
+}
+</script>
+</body>
+</html>
