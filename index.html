@@ -26,6 +26,34 @@ question here..."></textarea><br>
 <h2>Response:</h2>
 <p id="response"></p>
 <script>
+  async function askQuery() {
+const queryElement = document.getElementById('query');
+const query = queryElement.value;
+const responseElement = document.getElementById('response');
+try {
+const response = await fetch('/api/ask-query', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ query })
+});
+const data = await response.json();
+responseElement.textContent = data.reply;
+// Text-to-Speech
+const utterance = new SpeechSynthesisUtterance(data.reply);
+const selectedVoiceName =
+voiceSelect.selectedOptions[0].getAttribute('data-name');
+utterance.voice = voices.find(voice => voice.name ===
+selectedVoiceName);
+utterance.pitch = pitch.value;
+utterance.rate = rate.value;
+speechSynthesis.speak(utterance);
+// Clear the textarea
+queryElement.value = '';
+} catch (error) {
+responseElement.textContent = 'Error: ' + error.message;
+}
 const synth = window.speechSynthesis;
 const inputForm = document.querySelector("form");
 const inputTxt = document.querySelector(".txt");
@@ -60,34 +88,7 @@ event.preventDefault();
 askQuery();
 }
 });
-async function askQuery() {
-const queryElement = document.getElementById('query');
-const query = queryElement.value;
-const responseElement = document.getElementById('response');
-try {
-const response = await fetch('/api/ask-query', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ query })
-});
-const data = await response.json();
-responseElement.textContent = data.reply;
-// Text-to-Speech
-const utterance = new SpeechSynthesisUtterance(data.reply);
-const selectedVoiceName =
-voiceSelect.selectedOptions[0].getAttribute('data-name');
-utterance.voice = voices.find(voice => voice.name ===
-selectedVoiceName);
-utterance.pitch = pitch.value;
-utterance.rate = rate.value;
-speechSynthesis.speak(utterance);
-// Clear the textarea
-queryElement.value = '';
-} catch (error) {
-responseElement.textContent = 'Error: ' + error.message;
-}
+
 }
 </script>
 </body>
