@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,
+initial-scale=1.0">
+<title>Chat with Ollama</title>
+</head>
+<body>
+<h1>Chat with Ollama</h1>
+<form>
+<label for="voice">Choose a voice:</label>
+<select id="voice"></select><br>
+<label for="pitch">Pitch:</label>
+<input type="range" id="pitch" min="0" max="2" value="1"
+step="0.1">
+<span class="pitch-value">1</span><br>
+<label for="rate">Rate:</label>
+<input type="range" id="rate" min="0.1" max="10" value="1"
+step="0.1">
+<span class="rate-value">1</span><br>
+<textarea id="query" rows="4" cols="50" placeholder="Type your
+question here..."></textarea><br>
+<button type="button" onclick="askQuery()">Ask</button>
+</form>
+<h2>Response:</h2>
+<p id="response"></p>
+<script>
+const synth = window.speechSynthesis;
+const inputForm = document.querySelector("form");
+const inputTxt = document.querySelector(".txt");
+const voiceSelect = document.querySelector("#voice");
+const pitch = document.querySelector("#pitch");
+const pitchValue = document.querySelector(".pitch-value");
+const rate = document.querySelector("#rate");
+const rateValue = document.querySelector(".rate-value");
+let voices = [];
+function populateVoiceList() {
+voices = synth.getVoices();
+  for (let i = 0; i < voices.length; i++) {
+const option = document.createElement("option");
+option.textContent = `${voices[i].name} (${voices[i].lang})`;
+if (voices[i].default) {
+option.textContent += " — DEFAULT";
+}
+option.setAttribute("data-lang", voices[i].lang);
+option.setAttribute("data-name", voices[i].name);
+voiceSelect.appendChild(option); // Append the option to the
+select element
+}
+}
+populateVoiceList();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+speechSynthesis.onvoiceschanged = populateVoiceList;
+}
+document.getElementById('query').addEventListener('keydown',
+function(event) {
+if (event.key === 'Enter') {
+event.preventDefault();
+askQuery();
+}
+});
+async function askQuery() {
+const queryElement = document.getElementById('query');
+const query = queryElement.value;
+const responseElement = document.getElementById('response');
+try {
+const response = await fetch('/api/ask-query', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ query })
+});
+const data = await response.json();
+responseElement.textContent = data.reply;
+// Text-to-Speech
+const utterance = new SpeechSynthesisUtterance(data.reply);
+const selectedVoiceName =
+voiceSelect.selectedOptions[0].getAttribute('data-name');
+utterance.voice = voices.find(voice => voice.name ===
+selectedVoiceName);
+utterance.pitch = pitch.value;
+utterance.rate = rate.value;
+speechSynthesis.speak(utterance);
+// Clear the textarea
+queryElement.value = '';
+} catch (error) {
+responseElement.textContent = 'Error: ' + error.message;
+}
+}
+</script>
+</body>
+</html>
