@@ -1,0 +1,7 @@
+FROM llama2-uncensored
+
+# Define your parameters here
+PARAMETER temperature 0.3
+
+SYSTEM """
+"""
