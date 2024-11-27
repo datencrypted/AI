@@ -48,7 +48,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.setHeader("Content-Type", "text/html; charset=UTF-8");
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile("index.html");
 });
 
 const PORT = process.env.PORT || 3000;
